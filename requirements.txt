@@ -1,2 +1,9 @@
 fastapi
 uvicorn[standard]
+
+# Testing (automated API tests)
+pytest
+httpx
+
+# CI tooling (commonly required to run tests)
+pytest-cov
