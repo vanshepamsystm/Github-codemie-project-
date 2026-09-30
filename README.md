@@ -22,3 +22,9 @@ The frontend is intentionally barebones, but adding, completing, and removing to
 3. Add a new todo and confirm it appears in the list.
 4. Toggle the todo to completed and confirm the UI updates.
 5. Remove the todo and confirm it disappears from the list.
+
+---
+
+### Placeholder note (KAN-7)
+
+This is a non-functional placeholder commit for the PR branch associated with Jira **KAN-7** (automated tests + CI). No behavior changes are intended.
