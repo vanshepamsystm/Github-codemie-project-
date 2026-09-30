@@ -1,0 +1,146 @@
+:root {
+  color-scheme: light;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  color: #292d2a;
+  background: #f3f1e9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 48px 20px;
+  background-image: radial-gradient(#d9d7ce 0.7px, transparent 0.7px);
+  background-size: 15px 15px;
+}
+
+.todo-app {
+  width: min(100%, 560px);
+  margin: 7vh auto 0;
+  padding: 32px;
+  background: #fffefa;
+  border: 1px solid #d8d7ce;
+  box-shadow: 7px 7px 0 #d8d7ce;
+}
+
+.eyebrow,
+.footnote {
+  color: #74776f;
+  font-size: 0.82rem;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0 0 24px;
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+h1 span {
+  color: #d06a45;
+}
+
+#todo-form {
+  display: flex;
+  gap: 8px;
+}
+
+#todo-input {
+  min-width: 0;
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #b9bbb2;
+  border-radius: 0;
+  font: inherit;
+}
+
+button {
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 0;
+  background: #347467;
+  color: white;
+  font: inherit;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #285b51;
+}
+
+#status {
+  min-height: 1.2em;
+  margin: 8px 0;
+  color: #a33f31;
+  font-size: 0.9rem;
+}
+
+#todo-list {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin: 16px 0 24px;
+  list-style: none;
+}
+
+.todo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px dashed #d7d7ce;
+}
+
+.todo-row span {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.todo-row.is-complete span {
+  color: #85877f;
+  text-decoration: line-through;
+}
+
+.todo-row button {
+  padding: 5px 8px;
+  background: #e8e6dc;
+  color: #4b4d47;
+  font-size: 0.85rem;
+}
+
+.footnote {
+  margin: 0;
+  text-align: right;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 24px 14px;
+  }
+
+  .todo-app {
+    margin-top: 4vh;
+    padding: 24px 18px;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+}
