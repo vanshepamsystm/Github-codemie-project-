@@ -1,17 +1,24 @@
+from collections.abc import Iterator
+from contextlib import asynccontextmanager, contextmanager
+import logging
 from pathlib import Path
 import sqlite3
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE_PATH = BASE_DIR / "todos.db"
+SQLITE_BUSY_TIMEOUT_SECONDS = 5.0
 
-app = FastAPI(title="Half-Baked Todo")
-app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s level=%(levelname)s logger=%(name)s %(message)s",
+)
+logger = logging.getLogger("todo")
 
 
 class TodoCreate(BaseModel):
@@ -22,14 +29,22 @@ class TodoUpdate(BaseModel):
     completed: bool
 
 
-def get_connection() -> sqlite3.Connection:
-    connection = sqlite3.connect(DATABASE_PATH)
+@contextmanager
+def get_connection() -> Iterator[sqlite3.Connection]:
+    """Yield a connection that commits on success, rolls back on error, and always closes."""
+    connection = sqlite3.connect(DATABASE_PATH, timeout=SQLITE_BUSY_TIMEOUT_SECONDS)
     connection.row_factory = sqlite3.Row
-    return connection
+    try:
+        with connection:
+            yield connection
+    finally:
+        connection.close()
 
 
 def initialize_database() -> None:
     with get_connection() as connection:
+        # WAL lets readers proceed while a write is in progress.
+        connection.execute("PRAGMA journal_mode=WAL")
         connection.execute(
             """CREATE TABLE IF NOT EXISTS todos (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,7 +54,31 @@ def initialize_database() -> None:
         )
 
 
-initialize_database()
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    initialize_database()
+    logger.info("event=startup database=%s", DATABASE_PATH.name)
+    yield
+
+
+app = FastAPI(title="Half-Baked Todo", lifespan=lifespan)
+app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
+
+
+@app.get("/health")
+def health() -> dict:
+    return {"status": "ok"}
+
+
+@app.get("/ready")
+def ready() -> JSONResponse:
+    try:
+        with get_connection() as connection:
+            connection.execute("SELECT 1")
+    except sqlite3.Error:
+        logger.exception("event=readiness_failed")
+        return JSONResponse({"status": "unavailable"}, status_code=503)
+    return JSONResponse({"status": "ready"})
 
 
 @app.get("/")
@@ -68,6 +107,7 @@ def create_todo(todo: TodoCreate) -> dict:
     with get_connection() as connection:
         cursor = connection.execute("INSERT INTO todos (title) VALUES (?)", (title,))
         todo_id = cursor.lastrowid
+    logger.info("event=todo_created id=%s", todo_id)
     return {"id": todo_id, "title": title, "completed": False}
 
 
@@ -79,10 +119,12 @@ def update_todo(todo_id: int, todo: TodoUpdate) -> dict:
             (int(todo.completed), todo_id),
         )
         if cursor.rowcount == 0:
+            logger.warning("event=todo_not_found action=update id=%s", todo_id)
             raise HTTPException(status_code=404, detail="Todo not found")
         row = connection.execute(
             "SELECT id, title, completed FROM todos WHERE id = ?", (todo_id,)
         ).fetchone()
+    logger.info("event=todo_updated id=%s completed=%s", todo_id, todo.completed)
     return {"id": row["id"], "title": row["title"], "completed": bool(row["completed"])}
 
 
@@ -91,4 +133,6 @@ def delete_todo(todo_id: int) -> None:
     with get_connection() as connection:
         cursor = connection.execute("DELETE FROM todos WHERE id = ?", (todo_id,))
         if cursor.rowcount == 0:
+            logger.warning("event=todo_not_found action=delete id=%s", todo_id)
             raise HTTPException(status_code=404, detail="Todo not found")
+    logger.info("event=todo_deleted id=%s", todo_id)

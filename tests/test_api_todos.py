@@ -78,3 +78,38 @@ def test_delete_missing_todo_returns_404(client: TestClient):
     resp = client.delete("/api/todos/999999")
     assert resp.status_code == 404
     assert resp.json()["detail"] == "Todo not found"
+
+
+def test_health_returns_ok(client: TestClient):
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "ok"}
+
+
+def test_ready_returns_ready_when_database_reachable(client: TestClient):
+    resp = client.get("/ready")
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "ready"}
+
+
+def test_ready_returns_503_when_database_unreachable(
+    client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    # A directory cannot be opened as a SQLite database file.
+    monkeypatch.setattr(main, "DATABASE_PATH", tmp_path)
+    resp = client.get("/ready")
+    assert resp.status_code == 503
+    assert resp.json() == {"status": "unavailable"}
+
+
+def test_startup_initializes_database(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(main, "DATABASE_PATH", tmp_path / "fresh.db")
+    with TestClient(main.app) as started_client:
+        assert started_client.get("/api/todos").json() == []
+
+
+def test_connection_is_closed_after_use():
+    with main.get_connection() as connection:
+        connection.execute("SELECT 1")
+    with pytest.raises(sqlite3.ProgrammingError):
+        connection.execute("SELECT 1")
