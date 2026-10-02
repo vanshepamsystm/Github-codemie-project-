@@ -11,3 +11,7 @@ pytest-cov
 # Linting/Formatting (development/testing)
 ruff
 black
+pytest
+httpx
+ruff
+black
