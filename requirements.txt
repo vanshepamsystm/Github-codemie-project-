@@ -7,3 +7,7 @@ httpx
 
 # CI tooling (commonly required to run tests)
 pytest-cov
+
+# Linting/Formatting (development/testing)
+ruff
+black
