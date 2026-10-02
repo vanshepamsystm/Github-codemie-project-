@@ -1,4 +1,4 @@
-# Half-Baked Todo
+# Half-Baked Todo 
 
 A deliberately small todo prototype: plain HTML, CSS, and JavaScript on the frontend, FastAPI for the API, and SQLite 3 for storage.
 
@@ -14,6 +14,14 @@ uvicorn main:app --reload
 Open http://127.0.0.1:8000. The SQLite database (`todos.db`) is created automatically the first time the app starts.
 
 The frontend is intentionally barebones, but adding, completing, and removing todos is wired up end to end.
+
+## Run the tests
+
+```powershell
+pytest --cov=main --cov-report=term-missing
+```
+
+Tests live in `tests/` and run against a temporary SQLite file, so `todos.db` is never touched. The same command runs in CI (`.github/workflows/ci.yml`) on every pull request and on pushes to `master`, on Python 3.11 and 3.12, and fails if coverage of `main.py` drops below 90%.
 
 ## Manual smoke test checklist (KAN-2)
 
