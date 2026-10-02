@@ -1,4 +1,4 @@
-# Half-Baked Todo
+# Half-Baked Todo 
 
 A deliberately small todo prototype: plain HTML, CSS, and JavaScript on the frontend, FastAPI for the API, and SQLite 3 for storage.
 
