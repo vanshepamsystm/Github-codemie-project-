@@ -3,6 +3,14 @@ const input = document.querySelector("#todo-input");
 const list = document.querySelector("#todo-list");
 const status = document.querySelector("#status");
 
+function errorMessage(detail) {
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail) && detail.length) {
+    return detail.map((item) => item.msg).join("; ");
+  }
+  return "Something went wrong";
+}
+
 async function request(path, options = {}) {
   const response = await fetch(path, {
     headers: { "Content-Type": "application/json" },
@@ -11,7 +19,7 @@ async function request(path, options = {}) {
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || "Something went wrong");
+    throw new Error(errorMessage(error.detail));
   }
 
   return response.status === 204 ? null : response.json();

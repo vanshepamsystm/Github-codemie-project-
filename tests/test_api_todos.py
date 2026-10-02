@@ -1,6 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
 
+import main
+
 
 def create_todo(client: TestClient, title: str) -> dict:
     response = client.post("/api/todos", json={"title": title})
@@ -120,3 +122,50 @@ def test_non_integer_todo_id_is_rejected(client: TestClient, method: str):
     kwargs = {"json": {"completed": True}} if method == "patch" else {}
     resp = getattr(client, method)("/api/todos/not-a-number", **kwargs)
     assert resp.status_code == 422
+
+
+def test_todo_responses_match_response_model_shape(client: TestClient):
+    expected_keys = {"id", "title", "completed"}
+    created = create_todo(client, "shape")
+    assert set(created) == expected_keys
+
+    assert set(client.get("/api/todos").json()[0]) == expected_keys
+    patched = client.patch(f"/api/todos/{created['id']}", json={"completed": True})
+    assert set(patched.json()) == expected_keys
+    assert isinstance(created["id"], int)
+    assert isinstance(patched.json()["completed"], bool)
+
+
+def test_openapi_documents_todo_response_model(client: TestClient):
+    schema = client.get("/openapi.json").json()
+    todo_read = schema["components"]["schemas"]["TodoRead"]
+    assert set(todo_read["properties"]) == {"id", "title", "completed"}
+    assert set(todo_read["required"]) == {"id", "title", "completed"}
+
+
+def test_create_todo_accepts_title_at_max_length(client: TestClient):
+    title = "a" * main.TITLE_MAX_LENGTH
+    assert create_todo(client, title)["title"] == title
+
+
+def test_create_todo_rejects_title_over_max_length(client: TestClient):
+    resp = client.post("/api/todos", json={"title": "a" * (main.TITLE_MAX_LENGTH + 1)})
+    assert resp.status_code == 422
+    assert client.get("/api/todos").json() == []
+
+
+def test_create_todo_strips_before_checking_max_length(client: TestClient):
+    padded = "  " + "a" * main.TITLE_MAX_LENGTH + "  "
+    assert create_todo(client, padded)["title"] == "a" * main.TITLE_MAX_LENGTH
+
+
+def test_connection_sets_busy_timeout():
+    with main.get_connection() as connection:
+        timeout = connection.execute("PRAGMA busy_timeout").fetchone()[0]
+    assert timeout == main.BUSY_TIMEOUT_MS
+
+
+def test_database_uses_wal_journal_mode():
+    with main.get_connection() as connection:
+        mode = connection.execute("PRAGMA journal_mode").fetchone()[0]
+    assert mode.lower() == "wal"
