@@ -1,16 +1,5 @@
 fastapi
 uvicorn[standard]
-
-# Testing (automated API tests)
-pytest
-httpx
-
-# CI tooling (commonly required to run tests)
-pytest-cov
-
-# Linting/Formatting (development/testing)
-ruff
-black
 pytest
 httpx
 ruff
