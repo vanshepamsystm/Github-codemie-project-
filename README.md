@@ -27,4 +27,4 @@ The frontend is intentionally barebones, but adding, completing, and removing to
 
 ### Placeholder note (KAN-7)
 
-This is a non-functional placeholder commit for the PR branch associated with Jira **KAN-7** (automated tests + CI). No behavior changes are intended. 
+This is a non-functional placeholder commit for the PR branch associated with Jira **KAN-7** (automated tests + CI). No behavior changes are intended.  
