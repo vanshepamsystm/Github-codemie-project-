@@ -1,4 +1,5 @@
 from pathlib import Path
+import sqlite3
 
 import pytest
 from fastapi.testclient import TestClient
@@ -19,6 +20,13 @@ def test_tests_use_temporary_database(db_path: Path):
 
 def test_database_is_fresh_for_each_test(client: TestClient):
     assert client.get("/api/todos").json() == []
+
+
+def test_get_connection_closes_connection(db_path: Path):
+    with main.get_connection() as connection:
+        pass
+    with pytest.raises(sqlite3.ProgrammingError):
+        connection.execute("SELECT 1")
 
 
 # --- Create ----------------------------------------------------------------
@@ -44,6 +52,16 @@ def test_create_todo_trims_title(client: TestClient):
     resp = client.post("/api/todos", json={"title": "  Walk dog  "})
     assert resp.status_code == 201
     assert resp.json()["title"] == "Walk dog"
+
+
+def test_create_todo_rejects_overlong_title(client: TestClient):
+    resp = client.post("/api/todos", json={"title": "x" * (main.MAX_TITLE_LENGTH + 1)})
+    assert resp.status_code == 422
+
+
+def test_create_todo_accepts_max_length_title(client: TestClient):
+    resp = client.post("/api/todos", json={"title": "x" * main.MAX_TITLE_LENGTH})
+    assert resp.status_code == 201
 
 
 @pytest.mark.parametrize("title", ["", "   ", "\t\n"])
