@@ -7,3 +7,6 @@ httpx
 
 # CI tooling (commonly required to run tests)
 pytest-cov
+
+# Linting (run in CI: ruff check .)
+ruff

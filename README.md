@@ -1,5 +1,7 @@
 # Half-Baked Todo
 
+[![CI](https://github.com/vanshepamsystm/Github-codemie-project-/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/vanshepamsystm/Github-codemie-project-/actions/workflows/ci.yml)
+
 A deliberately small todo prototype: plain HTML, CSS, and JavaScript on the frontend, FastAPI for the API, and SQLite 3 for storage.
 
 ## Run it
@@ -15,6 +17,26 @@ Open http://127.0.0.1:8000. The SQLite database (`todos.db`) is created automati
 
 The frontend is intentionally barebones, but adding, completing, and removing todos is wired up end to end.
 
+## Run the automated tests
+
+The API tests use pytest and run against a temporary SQLite database, so your local `todos.db` is never touched.
+
+```powershell
+pip install -r requirements.txt
+pytest tests --ignore=tests/e2e
+ruff check .
+```
+
+For a coverage report (`pytest-cov` is in `requirements.txt`):
+
+```powershell
+pytest --cov=main --cov-report=term-missing
+```
+
+`tests/e2e` holds browser UI tests that need extra setup (`requirements-e2e.txt` and `playwright install chromium`), so they are excluded from the command above and from CI.
+
+CI (`.github/workflows/ci.yml`) runs `ruff check .` and the pytest suite on every pull request to, and push to, `master`.
+
 ## Manual smoke test checklist (KAN-2)
 
 1. Start the app and open http://127.0.0.1:8000/ .
@@ -27,4 +49,4 @@ The frontend is intentionally barebones, but adding, completing, and removing to
 
 ### Placeholder note (KAN-7)
 
-This is a non-functional placeholder commit for the PR branch associated with Jira **KAN-7** (automated tests + CI). No behavior changes are intended.
+This is a non-functional placeholder commit for the PR branch associated with Jira **KAN-7** (automated tests + CI). No behavior changes are intended.  

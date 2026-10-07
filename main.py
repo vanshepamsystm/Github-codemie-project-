@@ -1,31 +1,40 @@
+from collections.abc import Generator
+from contextlib import contextmanager
 from pathlib import Path
+import os
 import sqlite3
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 BASE_DIR = Path(__file__).resolve().parent
-DATABASE_PATH = BASE_DIR / "todos.db"
+DATABASE_PATH = Path(os.environ.get("TODO_DB_PATH", BASE_DIR / "todos.db"))
+MAX_TITLE_LENGTH = 200
 
 app = FastAPI(title="Half-Baked Todo")
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 
 
 class TodoCreate(BaseModel):
-    title: str
+    title: str = Field(max_length=MAX_TITLE_LENGTH)
 
 
 class TodoUpdate(BaseModel):
     completed: bool
 
 
-def get_connection() -> sqlite3.Connection:
+@contextmanager
+def get_connection() -> Generator[sqlite3.Connection, None, None]:
     connection = sqlite3.connect(DATABASE_PATH)
     connection.row_factory = sqlite3.Row
-    return connection
+    try:
+        with connection:
+            yield connection
+    finally:
+        connection.close()
 
 
 def initialize_database() -> None:
