@@ -1,0 +1,8 @@
+# Linter configuration used locally and in CI (.github/workflows/ci.yml).
+line-length = 120
+target-version = "py311"
+extend-exclude = ["docs", "task"]
+
+[lint]
+# pycodestyle errors + pyflakes: catches real defects without style churn.
+select = ["E", "F"]
