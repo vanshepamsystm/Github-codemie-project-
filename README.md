@@ -1,5 +1,7 @@
 # Half-Baked Todo
 
+[![CI](https://github.com/vanshepamsystm/Github-codemie-project-/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/vanshepamsystm/Github-codemie-project-/actions/workflows/ci.yml)
+
 A deliberately small todo prototype: plain HTML, CSS, and JavaScript on the frontend, FastAPI for the API, and SQLite 3 for storage.
 
 ## Run it
@@ -23,6 +25,12 @@ The API tests use pytest and run against a temporary SQLite database, so your lo
 pip install -r requirements.txt
 pytest tests --ignore=tests/e2e
 ruff check .
+```
+
+For a coverage report (`pytest-cov` is in `requirements.txt`):
+
+```powershell
+pytest --cov=main --cov-report=term-missing
 ```
 
 `tests/e2e` holds browser UI tests that need extra setup (`requirements-e2e.txt` and `playwright install chromium`), so they are excluded from the command above and from CI.
